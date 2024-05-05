@@ -1,0 +1,111 @@
+package beans.DataTable;
+
+import javax.swing.table.AbstractTableModel;
+import java.util.ArrayList;
+import java.util.List;
+
+public class DataSheetTableModel extends AbstractTableModel {
+
+    private static final long serialVersionUID = 1L;
+
+    private final int columnCount;
+    private int rowCount;
+    private final String[] columnNames;
+
+    private DataSheet dataSheet;
+    private final List<DataSheetChangeListener> listenerList;
+    private final DataSheetChangeEvent event;
+
+
+    public DataSheetTableModel() {
+        columnCount = 3;
+        rowCount = 1;
+        columnNames = new String[]{"Date", "X Value", "Y Value"};
+        dataSheet = new DataSheet();
+        dataSheet.addDataItem(new DataItem());
+        listenerList = new ArrayList<>();
+        event = new DataSheetChangeEvent(this);
+    }
+
+    public DataSheet getDataSheet() {
+        return dataSheet;
+    }
+
+    public void setDataSheet(DataSheet dataSheet) {
+        this.dataSheet = dataSheet;
+        rowCount = this.dataSheet.size();
+        fireDataSheetChange();
+    }
+
+    @Override
+    public int getColumnCount() {
+        return columnCount;
+    }
+
+    @Override
+    public int getRowCount() {
+        return rowCount;
+    }
+
+    @Override
+    public String getColumnName(int column) {
+        return columnNames[column];
+    }
+
+    @Override
+    public boolean isCellEditable(int rowIndex, int columnIndex) {
+        return columnIndex >= 0;
+    }
+
+    @Override
+    public void setValueAt(Object value, int rowIndex, int columnIndex) {
+        try {
+            if (dataSheet != null) {
+                if (columnIndex == 0) {
+                    dataSheet.getDataItem(rowIndex).setDate((String) value);
+                } else if (columnIndex == 1) {
+                    dataSheet.getDataItem(rowIndex).setX(Double.parseDouble((String) value));
+                } else if (columnIndex == 2) {
+                    dataSheet.getDataItem(rowIndex).setY(Double.parseDouble((String) value));
+                }
+            }
+            fireDataSheetChange();
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+
+    @Override
+    public Object getValueAt(int rowIndex, int columnIndex) {
+        if (dataSheet != null) {
+            if (columnIndex == 0) {
+                return dataSheet.getDataItem(rowIndex).getDate();
+            } else if (columnIndex == 1) {
+                return dataSheet.getDataItem(rowIndex).getX();
+            } else if (columnIndex == 2) {
+                return dataSheet.getDataItem(rowIndex).getY();
+            }
+        }
+        return null;
+    }
+
+    public void setRowCount(int rowCount) {
+        if (rowCount > 0) {
+            this.rowCount = rowCount;
+        }
+    }
+
+    public void addDataSheetChangeListener(DataSheetChangeListener listener) {
+        listenerList.add(listener);
+    }
+
+    public void removeDataSheetChangeListener(DataSheetChangeListener listener) {
+        listenerList.remove(listener);
+    }
+
+    protected void fireDataSheetChange() {
+        for (DataSheetChangeListener changeListener : listenerList) {
+            changeListener.dataChanged(event);
+        }
+    }
+}
