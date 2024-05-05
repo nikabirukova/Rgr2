@@ -1,0 +1,64 @@
+package beans.DataTable;
+
+import javax.swing.*;
+
+public class DataSheetTable {
+    private JPanel mainPanel;
+    private JScrollPane scrollPane;
+    private DataSheetTableModel tableModel;
+    private JTable table;
+    private JPanel buttonsPanel;
+    private JButton addButton;
+    private JButton deleteButton;
+
+    public DataSheetTable() {
+        addButtonActions();
+    }
+
+    private void createUIComponents() {
+        tableModel = new DataSheetTableModel();
+        table = new JTable();
+        table.setModel(tableModel);
+        addButton = new JButton("Add");
+        deleteButton = new JButton("Delete");
+
+    }
+
+    private void addButtonActions() {
+        addButton.addActionListener(e -> {
+            tableModel.setRowCount(tableModel.getRowCount()+1);
+            tableModel.getDataSheet().addDataItem(new DataItem());
+            table.revalidate();
+            tableModel.fireDataSheetChange();
+        });
+
+        deleteButton.addActionListener(e -> {
+            if (tableModel.getRowCount() > 1) {
+                tableModel.setRowCount(tableModel.getRowCount() - 1);
+                tableModel.getDataSheet().removeDataItem(tableModel.getDataSheet().size()-1);
+                table.revalidate();
+            } else {
+                tableModel.getDataSheet().getDataItem(0).setDate("");
+                tableModel.getDataSheet().getDataItem(0).setX(0);
+                tableModel.getDataSheet().getDataItem(0).setY(0);
+                table.revalidate();
+                table.repaint();
+            }
+            tableModel.fireDataSheetChange();
+        });
+    }
+
+    public DataSheetTableModel getTableModel() {
+        return tableModel;
+    }
+
+    public void revalidate() {
+        if (table != null) table.revalidate();
+    }
+
+
+    public void setTableModel(DataSheetTableModel tableModel) {
+        this.tableModel = tableModel;
+        table.revalidate();
+    }
+}
