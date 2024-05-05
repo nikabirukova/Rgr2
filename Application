@@ -1,0 +1,116 @@
+import beans.DataGraph.DataSheetGraph;
+import beans.DataTable.DataItem;
+import beans.DataTable.DataSheet;
+import beans.DataTable.DataSheetTable;
+import org.xml.sax.SAXException;
+import xml.LoadXML;
+import xml.SaveXML;
+
+import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.xml.bind.JAXBException;
+import java.awt.*;
+import java.io.File;
+
+public class Application extends JFrame {
+
+    private JPanel contentPane;
+    private JButton openButton;
+    private JButton saveButton;
+    private JButton clearButton;
+    private JButton exitButton;
+    private DataSheetTable dataSheetTable;
+    private DataSheetGraph dataSheetGraph;
+    private final JFileChooser fileChooser = new JFileChooser();
+    private final FileNameExtensionFilter xmlFilter = new FileNameExtensionFilter("XML files (.xml)", "xml");
+
+    public Application() {
+        setContentPane(contentPane);
+        addButtonActions();
+
+        dataSheetGraph.setDataSheet(dataSheetTable.getTableModel().getDataSheet());
+        dataSheetTable.getTableModel().addDataSheetChangeListener(event -> {
+            dataSheetGraph.revalidate();
+            dataSheetGraph.repaint();
+        });
+    }
+
+    private void addButtonActions() {
+        fileChooser.setCurrentDirectory(new File("./src"));
+
+        openButton.addActionListener(event -> {
+            fileChooser.setDialogTitle("Open XML file");
+            fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+            fileChooser.setFileFilter(xmlFilter);
+            fileChooser.setAcceptAllFileFilterUsed(false);
+            if (JFileChooser.APPROVE_OPTION == fileChooser.showOpenDialog(null)) {
+                String filePath = fileChooser.getSelectedFile().getPath();
+                try {
+                    DataSheet dataSheet = LoadXML.XmlToDataSheet(filePath);
+                    if (dataSheet.size() < 1) {
+                        dataSheet.addDataItem(new DataItem());
+                    }
+                    dataSheetTable.getTableModel().setDataSheet(dataSheet);
+                    dataSheetTable.revalidate();
+                    dataSheetGraph.setDataSheet(dataSheet);
+                } catch (JAXBException | SAXException ex) {
+                    JOptionPane.showMessageDialog(null, "Invalid XML document!", "Parse Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        saveButton.addActionListener(event -> {
+            fileChooser.setDialogTitle("Select directory to save XML");
+            fileChooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+            fileChooser.removeChoosableFileFilter(xmlFilter);
+            fileChooser.setAcceptAllFileFilterUsed(true);
+            if (JFileChooser.APPROVE_OPTION == fileChooser.showOpenDialog(null)) {
+                String directoryPath = fileChooser.getSelectedFile().getPath();
+                String fileName = "DataSheetXML.xml";
+
+                try {
+                    SaveXML.dataSheetToXml(dataSheetTable.getTableModel().getDataSheet(), directoryPath + "/" + fileName);
+                    JOptionPane.showMessageDialog(null, "Data was saved!", "OK", JOptionPane.INFORMATION_MESSAGE);
+                } catch (JAXBException ex) {
+                    JOptionPane.showMessageDialog(null, "Data was not saved! Check folder path!", "Saving error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+
+        clearButton.addActionListener(event -> {
+            DataSheet newDataSheet = new DataSheet();
+            newDataSheet.addDataItem(new DataItem());
+            dataSheetTable.getTableModel().setDataSheet(newDataSheet);
+            dataSheetTable.revalidate();
+            dataSheetGraph.setDataSheet(newDataSheet);
+        });
+
+        exitButton.addActionListener(event -> dispose());
+    }
+
+    private void createUIComponents() {
+        openButton = new JButton("Open");
+        saveButton = new JButton("Save");
+        clearButton = new JButton("Clear");
+        exitButton = new JButton("Exit");
+        dataSheetTable = new DataSheetTable();
+        dataSheetGraph = new DataSheetGraph();
+    }
+
+    public static void main(String[] args) {
+        Application frame = new Application();
+        frame.setTitle("Klochko Andrew's application");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.pack();
+
+        // Окно появляется по центру экрана
+        Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
+        frame.setLocation(dim.width/2 - frame.getSize().width/2, dim.height/2-frame.getSize().height/2);
+
+        // Установка другой иконки на окно
+        ImageIcon img = new ImageIcon("./src/public/icons/main_icon.jpg");
+        frame.setIconImage(img.getImage());
+
+        frame.setVisible(true);
+    }
+}
