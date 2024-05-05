@@ -1,0 +1,17 @@
+package xml;
+
+import beans.DataTable.DataSheet;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
+import java.io.File;
+
+public class SaveXML {
+
+    public static void dataSheetToXml(DataSheet dataSheet, String filePath) throws JAXBException {
+        Marshaller marshaller = JAXBContext.newInstance(DataSheet.class).createMarshaller();
+        marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+        marshaller.marshal(dataSheet, new File(filePath));
+    }
+}
